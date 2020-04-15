@@ -5,7 +5,9 @@ package com.xc.jvm.bytecode;
  * 1.使用javap -verbose 命令分析一个字节码文件时,将会分析该字节码文件的魔数,版本号,常量池,类信息,类的构造方法
  * 类中的方法信息,类变量与成员变量等信息
  * 2.魔数:所有的.class文件的前4个字节都是魔数,固定值为:OxCAFEBABE
+ *
  * 3.版本号:魔术之后4个字节码为版本号,前两个表示minor version,后两个表示major version(主版本号)
+ *
  * 4.常量池(constant pool):紧接着主版本好之后的就是常量池入库,一个java类中定义的很多信息都是由常量此来维护和描述的
  * 可以将常量池看做是class文件的资源仓库,比如java中定义的方法与变量信息,都是存储在常量池中,常量池中主要存储连累
  * 常量:字面量与符号引用,字面量如文本字符串,java中声明为final的常量值等,而符号引用如类和接口的全局限定名,字段的
@@ -26,7 +28,25 @@ package com.xc.jvm.bytecode;
  * 8.用描述符来描述方法是,按照先参数列表,后返回值的顺序来描述.参数列表按照参数的严格顺序放在一组()之内,如方法:String getRealNameByIdAndNickName(
  * int id,String name)的描述符为:(I,Ljava/lang/String;)Ljava/lang/String;
  *
+ * 9. 访问标示符(Access Flag):2个字节,包括该class文件是类还是接口,是否被定义成public,是否是abstract,
+ * 如果是类,是否被声明为final
  *
+ * 10.当前类的名字:2个字节
+ *
+ * 11.父类的名字:2个字节
+ *
+ * 12.接口:接口数量(u2)+接口表(u2)
+ *
+ * 13.字段表:字段表个数(u2)+字段表 用于描述类和接口中声明的变量.这里的字段包含了类级别变量以及实例变量,
+ * 但是不包括方法内部声明的局部变量
+ * fields_count:u2
+ * field_info {
+ *     u2 access_flags;
+ *     u2 name_index;
+ *     u2 descriptor_index;
+ *     u2 attributes_count;
+ *     attribute_info attributes[attributes_count];
+ * }
  */
 public class MyTest1 {
 
