@@ -47,6 +47,44 @@ package com.xc.jvm.bytecode;
  *     u2 attributes_count;
  *     attribute_info attributes[attributes_count];
  * }
+ *
+ * 14.方法表:方法个数(u2)+方法表
+ * method_info {
+ *     u2 access_flags;
+ *     u2 name_index;
+ *     u2 descriptor_index;
+ *     u2 attributes_count;
+ *     attribute_info attributes[attributes_count];
+ * }
+ * 方法中的每一个属性都是一个attribute_info结构
+ * attribute_info {
+ *     u2 attribute_name_index;
+ *     u4 attribute_length;
+ *     u1 info[attribute_length];
+ * }
+ * JVM预定义了部分attribute,但是编译器自己也可以实现自己的attribute写入class文件里,供运行时使用
+ * 不同的attribute通过attribute_name_index来区分
+ *
+ * 15.code结构 保存该方法的结构
+ * Code_attribute {
+ *     u2 attribute_name_index;
+ *     u4 attribute_length; //表示attribute所包含的字节数,不包括attribute_name_index和attribute_lenght字段
+ *     u2 max_stack; //表示方法运行的任何时刻所能达到的操作数栈的最大深度
+ *     u2 max_locals;//表示方法执行期间创建的局部变量的个数,包括用来表示传入的参数的局部变量
+ *     u4 code_length;//表示方法所包含的字节码的字节数以及具体的指令码
+ *     u1 code[code_length];//jvm执行的字节码
+ *     u2 exception_table_length;
+ *     {
+ *         u2 start_pc; //在code数组中的[start_pc,end_pc)的指令抛出的异常会由这个表项来处理
+ *         u2 end_pc;
+ *         u2 handler_pc; //处理异常代码的开始处
+ *         u2 catch_type; //表示被处理的异常类型,指向常量池里的一个异常类.当catch_type为0,表示处理所有的异常
+ *     } exception_table[exception_table_length]; //处理异常的信息
+ *     u2 attributes_count;
+ *     attribute_info attributes[attributes_count];
+ * }
+ *
+ * LineNumberTable:这个属性表示code数组中的字节码与java代码行数之间的关系,可以用来在调试的时候定位代码执行的行数
  */
 public class MyTest1 {
 
