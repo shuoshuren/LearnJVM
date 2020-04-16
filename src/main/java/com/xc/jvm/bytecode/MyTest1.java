@@ -85,6 +85,18 @@ package com.xc.jvm.bytecode;
  * }
  *
  * LineNumberTable:这个属性表示code数组中的字节码与java代码行数之间的关系,可以用来在调试的时候定位代码执行的行数
+ *
+ * LineNumberTable_attribute {
+ *     u2 attribute_name_index;
+ *     u4 attribute_length;
+ *     u2 line_number_table_length;
+ *     {
+ *         u2 start_pc;
+ *         u2 line_number;
+ *     } line_number_table[line_number_table_length];
+ * }
+ *
+ *
  */
 public class MyTest1 {
 
