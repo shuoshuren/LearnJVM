@@ -23,7 +23,7 @@ import java.net.ServerSocket;
  */
 public class MyTest3 {
 
-    public void test() {
+    public void test() throws IOException{
         try {
             InputStream is = new FileInputStream("test.txt");
             ServerSocket socket = new ServerSocket(9999);
