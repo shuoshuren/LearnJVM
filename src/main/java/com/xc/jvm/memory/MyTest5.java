@@ -12,6 +12,11 @@ package com.xc.jvm.memory;
  * 6. jcmd pid Thread.print:查看线程的堆栈信息
  * 7. jcmd pid GC.heap_dump <filename>:导出heap dump文件
  * 8 jcmd pid VM.system_properties:查看jvm的属性信息
+ * 9. jcmd pid VM.version : 获取jvm进程的版本信息
+ *
+ * jstack: 可以查看或者导出java应用程序中线程的堆栈信息
+ * jmd:java mission control
+ * jfr:java flight recorder
  *
  *
  */
