@@ -264,6 +264,25 @@ safepoint机制保证程序执行时,在不太长时间就会遇到可进入GC�
 region状态的线程,当线程要离开safe region时,要检查系统是否已经完成根节点枚举(或整个GC过程),如果完成,那线程就继续执行,否则
 它必须等待直到收到可以安全离开safe region的信号为止
 
+#### CMS收集器
+CMS(Concurrent Mark Sweep)收集器,以获取最短回收停顿时间为目标,多数应用与互联网站或者B/S系统的服务器上
+CMS基于"标记-清除"算法实现,整个过程分为4个步骤:
+1.初始标记(CMS initial mark):只是标记一下GC Root能直接关联到的对象,速度很快
+2.并发标记(CMS concurrent mark):就是进行GC Roots Traacing 的过程
+3.重新标记(CMS remark):为修正并发标记期间赢用户程序继续运作而导致标记产生变动的那一部分对象的标记记录,这个阶段的停顿时间一般会比初始标记阶段稍长一些,但比并发标记的时间短.
+4.并发清除(CMS Concurrent sweep):
+其中初始标记和重新标记需要"Stop the world".在整个过程中耗时长的并发标记和并发清除过程收集器线程都可以与用户线程一起工作,因此,从总体来看,CMS收集器的内存回收过程是与用户线程一起并发执行的.
+
+优点:并发收集,低停顿
+缺点:CMS收集器对CPU资源敏感
+CMS收集器无法处理浮动垃圾(Floating Garbage),可能出现"Concurrent Mode Failure"失败而导致另一次Full GC的产生.可适当调高参数-XX:CMSInitiatingOccupancyFraction的值来提高触发百分比
+收集结束时会有大量空间碎片产生,空间碎片过多时,会对大对象分配带来很大麻烦.不得不提前进行一次Full GC.CMS收集器提供了-XX:+UseCMSCompactAtFullCollection开关参数.用于在CMS收集器顶不住要进行Full Gc时开启内存碎片的合并整理过程.
+对于堆比较大的引用,GC的时间难以预估
+
+#### 空间分配担保
+在发生Minor GC之前,JVM会先检查老年代最大可用连续空间是否大于新生代所有对象总空间,如果条件成立,那么Minor GC可用确保是安全的.当大量对象在Minor GC后仍然存活,就需要老年代进行空间分配担保,把Survivor无法容纳的对象直接进入老年代,如果老年代判断剩余空间不足(根据以往每次回收晋升到老年代对象容量的平均值作为经验值),则进行一次Full GC
+
+
 
 
 
