@@ -313,6 +313,50 @@ CMS收集器无法处理浮动垃圾(Floating Garbage),可能出现"Concurrent M
 7.已记忆集合(RSet):Rset记录了其他region中对象引用本Region中对象的关系,属于points-into结构(谁引用了我的对象).RSet价值在于使得垃圾收集器不需要扫描这个堆找到谁引用了当前分区中的对象,只需要扫描RSet即可
 8.Snapshot-At-The-Beginning(SATB):G1 GC在并发标记阶段使用的增量式的标记算法,并发标记是并发多线程的,但是并发线程是在同一时刻只扫描一个分区
 
+#### G1相对CMS优势
+1.G1在压缩空间方面有优势
+2.G1通过将内存空间分成区域(Region)的方式避免内存碎片问题
+3.Eden,survivor,old区不在固定,在内存使用效率上来说更灵活
+4.g1可以通过设置预期停顿时间(Pause Time)来控制垃圾收集时间,避免应用雪崩现象
+5.g1在回收内存后会马上同时做合并空闲内存的工作,而cms默认是在stw的时候做
+6.g1会在Yong GC中使用,而CMS只能在O区使用
+
+#### G1 GC模式
+1.G1提供两种GC模式:Yong GC和Mixed GC,两种都是完全的stop the world的
+2.Young GC:选定所有年轻代里的Region,通过控制年轻代的Region个数,即年轻代内存大小,来控制young GC的时间开销
+3.Mixed GC:选定所有年轻代里的Region,外加根据global concurrent marking统计得出收集收益高的若干老年代Region.在用户指定的开销目标范围内尽可能选择收益高的老年代Region
+4.Mixed GC不是Full GC,它只能回收部分老年代的Region,如果mixed GC实在无法跟上程序分配内存的速度,导致老年代谈判无法继续进行Mixed GC,就会使用serial old GC(Full GC)来收集整个GC heap.所以本质上,G1不提供Full GC的
+
+#### global concurrent marking
+global concurrent marking的执行过程类似与CMS,但是不同的是,在G1 gc中,主要是为Mixed GC提供标记服务的,并不是一次GC过程中的必须环节.
+执行分为4个步骤:
+1.初始标记(initial mark,STW):标记了从GC Root开始直接可达的对象
+2.并发标记(Concurrent marking):这个阶段从GC root开始对heap中对象进行标记,标记线程与应用程序线程并发执行,并且收集各个Region的存活对象信息
+3.重新标记(Remark,STW):标记哪些在并发标记阶段发生变化的对象,将被回收
+4.清理(CLeanup):清除空Region(没有存活对象的),加入到free list
+
+第一阶段initial mark是共用Young GC的暂停,因为可以复用root scan操作,所以可以说global concurrent marking是伴随young gc而发生的
+第四阶段cleanup只是回收了没有存活对象的region,所以并不需要stw
+
+#### G1运行中的主要模式
+1.YGC:在eden充满时触发,在回收之后,所有之前属于eden的区块全部变成空白,即不属于任何一个分区
+2.Mixed GC:由一些参数控制,另外也控制着哪些老年代Region会被选入CSet
+G1HeapWastePerent:在 global Concurrent marking结束之后,可以知道old gen region中有多少空间要被回收,在每次YGC之后和再次发生Mixed GC之前,会检查垃圾占比是否达到此参数,只有达到了,下次才会发生Mixed GC
+G1MixedGCLiveThresholdPercent:old gen region中存活对象的占比,只有在此参数之下,才会被选入CSet
+G1MixedGCCountTarget:一次global Concurrent marking之后,最多执行mixed gc的次数
+G1OldCSetRegionThresholdPercent:一次Mixed GC中能被选入CSet的最多old generation region数量
+
+#### G1 GC参数
+-XX:G1HeapRegionSize=n:设置Region大小,并非最终值
+-XX:MaxGCPauseMills:设置G1收集过程目标时间,默认值200ms
+-XX:G1NewSizePercent:新生代最小值,默认5%
+-XX:G1MaxNewSizePercent:新生代最大值,默认60%
+-XX:ParallelGCThreads:STW期间,并行GC线程数
+-XX:ConcGCThreads=n:并发标记阶段,并发执行的线程数
+-XX:initiatingHeapOccupancyPercent:设置触发标记周期的java堆占用率阀值,默认45%,java堆占比指non_young_capacity_bytes,包括old+humongous
+
+
+
 
 
 
